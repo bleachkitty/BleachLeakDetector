@@ -33,3 +33,7 @@
 
 # Temp stuff
 .vs
+*.user
+x64
+x86
+*.pdb
