@@ -37,3 +37,11 @@
 x64
 x86
 *.pdb
+Debug
+Release
+BleachLeakDetector.vcxproj.FileListAbsolute.txt
+*.ibd
+*.iobj
+*.log
+*.tlog
+*.ilk

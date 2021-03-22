@@ -65,14 +65,14 @@
             void DumpMemoryRecords();
         }
 
-        #define MEMORY_DEBUG_INIT() MemoryDebug::Init()
-        #define MEMORY_DEBUG_DUMP_AND_DESTROY() MemoryDebug::DumpAndDestroy()
+        #define _MEMORY_DEBUG_INIT() MemoryDebug::Init()
+        #define _MEMORY_DEBUG_DUMP_AND_DESTROY() MemoryDebug::DumpAndDestroy()
         #define BLEACH_NEW_BREAK(_type_, _count_) new(__FILE__, __LINE__, _count_) _type_
         #define BLEACH_NEW_ARRAY_BREAK(_type_, _size_, _count_) new(__FILE__, __LINE__, _count_) _type_[_size_]
         #define DUMP_MEMORY_RECORDS() MemoryDebug::DumpMemoryRecords()
     #else  // !ENABLE_BLEACH_MEMORY_DEBUGGING
-        #define MEMORY_DEBUG_INIT() void(0)
-        #define MEMORY_DEBUG_DUMP_AND_DESTROY() void(0)
+        #define _MEMORY_DEBUG_INIT() void(0)
+        #define _MEMORY_DEBUG_DUMP_AND_DESTROY() void(0)
         #define BLEACH_NEW_BREAK(_type_, _count_) BLEACH_NEW(_type_)
         #define BLEACH_NEW_ARRAY_BREAK(_type_, _size_, _count_) BLEACH_NEW_ARRAY(_type_, _size_)
         #define DUMP_MEMORY_RECORDS() void(0)
@@ -80,9 +80,9 @@
 
     #define INIT_LEAK_DETECTOR() \
         _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF); \
-        MEMORY_DEBUG_INIT()
+        _MEMORY_DEBUG_INIT()
 
-    #define DESTROY_LEAK_DETECTOR() MEMORY_DEBUG_DUMP_AND_DESTROY()
+    #define DESTROY_LEAK_DETECTOR() _MEMORY_DEBUG_DUMP_AND_DESTROY()
 
     #pragma warning(pop)
 
@@ -97,5 +97,9 @@
     #define MEMORY_DEBUG_INIT() void(0)
     #define MEMORY_DEBUG_DUMP_AND_DESTROY() void(0)
     #define DUMP_MEMORY_RECORDS() void(0)
+
+    #define INIT_LEAK_DETECTOR() void(0)
+    #define DESTROY_LEAK_DETECTOR() void(0)
+
 
 #endif  // USE_DEBUG_BLEACH_NEW

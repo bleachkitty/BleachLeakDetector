@@ -25,8 +25,9 @@
 #pragma once
 
 //---------------------------------------------------------------------------------------------------------------------
-// In order to use this leak detector, you should #define USE_DEBUG_BLEACH_NEW and set the value to 1.  This should 
-// only be done in debug mode.  It's also a Windows-only thing since we're using Microsoft-specific CRT extensions.
+// This must be set to 1 in order to use the leak detector.  If it's set to 0, the BLEACH_* macros will just call new 
+// and delete.  Note that this should only be done in debug mode.  It's also a Windows-only thing since we're using 
+// Microsoft-specific CRT extensions.
 //---------------------------------------------------------------------------------------------------------------------
 #if defined(_WIN32) && defined(_DEBUG)
     #define USE_DEBUG_BLEACH_NEW 1
@@ -40,4 +41,4 @@
 // is especially useful when you have a loop or something that calls new over and over, but only one of those 
 // allocations is leaking.
 //---------------------------------------------------------------------------------------------------------------------
-#define ENABLE_BLEACH_MEMORY_DEBUGGING 1
+#define ENABLE_BLEACH_MEMORY_DEBUGGING 0

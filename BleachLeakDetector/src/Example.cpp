@@ -34,9 +34,10 @@ int main()
     //      Data : <                > CD CD CD CD CD CD CD CD CD CD CD CD CD CD CD CD
     char* pBuffer = BLEACH_NEW_ARRAY(char, 32);
 
-    // Allocate an array of five ints and delete all but the middle one.  You should get a message saying that 
-    // ID 3 leaked.  ID's start at 1, so this is the 3rd allocation, which means it's index #2.  Also note the 
-    // data is 04 00 00 00, which is correct (2 * 2 = 4).
+    // Allocate an array of five ints and delete all but the middle one.  If you set ENABLE_BLEACH_MEMORY_DEBUGGING 
+    // to 1 (it's 0 by default), you should get a message saying that ID 3 leaked.  ID's start at 1, so this is the 
+    // 3rd allocation, which means it's index #2.  Also note the data is 04 00 00 00, which is correct (2 * 2 = 4).
+    // If ENABLE_BLEACH_MEMORY_DEBUGGING is set to 0, you will just get the standard leak message above.
     int* pValues[5];
     for (size_t i = 0; i < 5; ++i)
     {
