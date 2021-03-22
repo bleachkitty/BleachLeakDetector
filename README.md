@@ -22,5 +22,5 @@ To use it in your own projects, you must do the following:
 
 That's about it!
 
-#Further Work
+# Further Work
 If you have any suggestions for future work, let me know.  I'm happy to consider feature requests and review any pull requests if you find something that's broken.
