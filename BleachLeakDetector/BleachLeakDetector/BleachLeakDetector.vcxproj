@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\BleachNew.h" />
+    <ClInclude Include="src\BleachNewConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\BleachNew.cpp" />
