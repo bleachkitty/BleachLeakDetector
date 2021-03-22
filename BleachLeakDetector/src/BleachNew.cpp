@@ -177,8 +177,11 @@
 
                 std::string line;
                 uint64_t count = 0;
-                for (const auto& [address, record] : m_records)
+                for (const auto& addressRecordPair : m_records)
                 {
+                    const auto& address = addressRecordPair.first;
+                    const auto& record = addressRecordPair.second;
+
                     line = std::to_string(count) + "> ";
 
                     auto findIt = m_counts.find(record.allocLocationHash);
