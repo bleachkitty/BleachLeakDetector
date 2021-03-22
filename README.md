@@ -7,7 +7,7 @@ There are three major features of the leak detection system:
 2) You can track all allocations and deallocations so that any allocations that are freed are displayed with an ID number.
 3) Once you have the ID number, you can break into the debugger when that specific ID is allocated.
 
-Note that #1 and #2 are quite expensive, so they are not enabled by default.
+Note that #2 is quite expensive, so it's not enabled by default.
 
 # Usage
 The best way to get started using the Bleach Leak Detector is to open the solution file and look at Example.cpp.  It's a simple showcase of the features.

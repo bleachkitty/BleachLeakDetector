@@ -26,8 +26,41 @@
 
 #if USE_DEBUG_BLEACH_NEW
 
+#include <crtdbg.h>
+
 //---------------------------------------------------------------------------------------------------------------------
-// Memory debugging.  We maintain two hash maps, one for all the records keyed by address and one to keep track of 
+// Functions for the core leak detector.
+//---------------------------------------------------------------------------------------------------------------------
+namespace BleachNewInternal
+{
+    void InitLeakDetector()
+    {
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#if ENABLE_BLEACH_ALLOCATION_TRACKING
+        BleachNewInternal::InitMemoryTracker();
+#endif
+    }
+
+    void DestroyLeakDetector()
+    {
+#if ENABLE_BLEACH_ALLOCATION_TRACKING
+        BleachNewInternal::DumpAndDestroyMemoryTracker();
+#endif
+    }
+
+    inline static void* DebugAlloc(size_t size, const char* filename, int lineNum)
+    {
+        return _malloc_dbg(size, 1, filename, lineNum);
+    }
+
+    inline static void DebugFree(void* pMemory)
+    {
+        _free_dbg(pMemory, 1);
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+// Memory tracking.  We maintain two hash maps, one for all the records keyed by address and one to keep track of 
 // the incremental ids, keyed by source hash.  The source hash is the hash of the filename and line number.  When an 
 // allocation happens, we generate a new record and insert it into the records hash and then increment the count for 
 // it in the counts hash.
@@ -40,13 +73,15 @@
 // contain the order in which that allocation was made.  You can then use BLEACH_NEW_BREAK() to break on that specific 
 // allocation.
 //---------------------------------------------------------------------------------------------------------------------
-#if ENABLE_BLEACH_MEMORY_DEBUGGING
+#if ENABLE_BLEACH_ALLOCATION_TRACKING
     #include <unordered_map>
     #include <string>
     #include <mutex>
     #include <atomic>
 
-    // Windows is required here.
+    //-----------------------------------------------------------------------------------------------------------------
+    // Windows is required.
+    //-----------------------------------------------------------------------------------------------------------------
     #ifdef _WIN32
         #define WIN32_LEAN_AND_MEAN
         #include <Windows.h>
@@ -62,18 +97,33 @@
         #error "BleachNew requires a Windows platform."
     #endif
 
-    // You will need to redefine this for non-Visual Studio IDEs.
-    #if !defined(BREAK_INTO_DEBUGGER) && defined(_MSC_VER)
-        extern void __cdecl __debugbreak(void);
-        #define BREAK_INTO_DEBUGGER() __debugbreak()
-    #endif
-
-    namespace MemoryDebug
+    namespace BleachNewInternal
     {
-        // If you want to get this working for other compilers, you'll need to rewrite this fucntion.
-        static void OutputStringToDebugger(const char* str) { OutputDebugStringA(str); }
+        //-------------------------------------------------------------------------------------------------------------
+        // Functions for interacting with the debugger, specifically being able to break into the debugger 
+        // programmatically and writing strings to the output window in Visual Studio.  Note that this is all 
+        // likely very specific Visual Studio, so you will need to redefine these functions for other compilers.
+        //-------------------------------------------------------------------------------------------------------------
+        #ifdef _MSC_VER
+            static void BreakIntoDebugger()
+            {
+                if (::IsDebuggerPresent() == TRUE)
+                    ::DebugBreak();
+            }
 
-        class MemoryDebugger
+            static void OutputStringToDebugger(const char* str)
+            {
+                OutputDebugStringA(str);
+            }
+        #else  // non-Visual Studio
+            static void BreakIntoDebugger() { }  // Potentially do __asm int 3?  That *should* work on most PCs.
+            static void OutputStringToDebugger(const char*) { }  // Maybe print to std::cerr by default?
+        #endif
+
+        //-------------------------------------------------------------------------------------------------------------
+        // The memory tracker.
+        //-------------------------------------------------------------------------------------------------------------
+        class MemoryTracker
         {
             struct MemoryRecord
             {
@@ -111,7 +161,7 @@
             std::atomic_bool m_destroying;
 
         public:
-            MemoryDebugger()
+            MemoryTracker()
                 : m_destroying(false)
             {
                 // find() crashes if the bucket array has a zero length, so this gets around that
@@ -119,7 +169,7 @@
                 m_records.reserve(4);
             }
 
-            ~MemoryDebugger()
+            ~MemoryTracker()
             {
                 m_destroying = true;  // *sigh*
             }
@@ -142,7 +192,7 @@
                     ++countRecord.count;
                     if (countRecord.count == breakPoint)
                     {
-                        BREAK_INTO_DEBUGGER();
+                        BreakIntoDebugger();
                     }
                     m_records.emplace(reinterpret_cast<size_t>(pPtr), MemoryRecord{ allocHash, pPtr, countRecord.count });
                 }
@@ -150,7 +200,7 @@
                 {
                     if (breakPoint == 1)
                     {
-                        BREAK_INTO_DEBUGGER();
+                        BreakIntoDebugger();
                     }
                     m_counts.emplace(allocHash, CountRecord{ filename, lineNum, 1 });
                     m_records.emplace(reinterpret_cast<size_t>(pPtr), MemoryRecord{ allocHash, pPtr, 1 });
@@ -165,7 +215,7 @@
                 m_records.erase(reinterpret_cast<size_t>(pPtr));
             }
 
-            void DumpMemoryRecords()
+            void DumpTrackerMemoryRecords()
             {
                 if (m_destroying)
                     return;
@@ -220,21 +270,21 @@
             }
         };
 
-        MemoryDebugger* g_pMemoryDebugger = nullptr;
+        MemoryTracker* g_pMemoryDebugger = nullptr;
 
-        void Init()
+        void InitMemoryTracker()
         {
             if (!g_pMemoryDebugger)
-                g_pMemoryDebugger = new MemoryDebugger;  // purposefully not using the overloaded version of new
+                g_pMemoryDebugger = new MemoryTracker;  // purposefully not using the overloaded version of new
         }
 
-        void DumpAndDestroy()
+        void DumpAndDestroyMemoryTracker()
         {
             if (g_pMemoryDebugger)
             {
-                DumpMemoryRecords();
-                delete g_pMemoryDebugger;
-                g_pMemoryDebugger = nullptr;  // purposefully not using the overloaded version of delete
+                DumpTrackerMemoryRecords();
+                delete g_pMemoryDebugger;  // purposefully not using the overloaded version of delete
+                g_pMemoryDebugger = nullptr;
             }
         }
 
@@ -250,70 +300,70 @@
                 g_pMemoryDebugger->RemoveRecord(pPtr);
         }
 
-        void DumpMemoryRecords()
+        void DumpTrackerMemoryRecords()
         {
             if (g_pMemoryDebugger)
-                g_pMemoryDebugger->DumpMemoryRecords();
+                g_pMemoryDebugger->DumpTrackerMemoryRecords();
         }
     }
-#endif  // ENABLE_BLEACH_MEMORY_DEBUGGING
+#endif  // ENABLE_BLEACH_ALLOCATION_TRACKING
 
 //---------------------------------------------------------------------------------------------------------------------
 // Debug new/delete overloads
 //---------------------------------------------------------------------------------------------------------------------
 void* operator new(size_t size, const char* filename, int lineNum)
 {
-#if ENABLE_BLEACH_MEMORY_DEBUGGING
-    void* pPtr = DebugAlloc(size, filename, lineNum);
-    MemoryDebug::AddRecord(pPtr, filename, lineNum);
+#if ENABLE_BLEACH_ALLOCATION_TRACKING
+    void* pPtr = BleachNewInternal::DebugAlloc(size, filename, lineNum);
+    BleachNewInternal::AddRecord(pPtr, filename, lineNum);
     return pPtr;
 #else
-    return DebugAlloc(size, filename, lineNum);
+    return BleachNewInternal::DebugAlloc(size, filename, lineNum);
 #endif
 }
 
 void operator delete(void* pMemory)
 {
-#if ENABLE_BLEACH_MEMORY_DEBUGGING
-    MemoryDebug::RemoveRecord(pMemory);
+#if ENABLE_BLEACH_ALLOCATION_TRACKING
+    BleachNewInternal::RemoveRecord(pMemory);
 #endif
-    DebugFree(pMemory);
+    BleachNewInternal::DebugFree(pMemory);
 }
 
 void* operator new[](size_t size, const char* filename, int lineNum)
 {
-#if ENABLE_BLEACH_MEMORY_DEBUGGING
-    void* pPtr = DebugAlloc(size, filename, lineNum);
-    MemoryDebug::AddRecord(pPtr, filename, lineNum);
+#if ENABLE_BLEACH_ALLOCATION_TRACKING
+    void* pPtr = BleachNewInternal::DebugAlloc(size, filename, lineNum);
+    BleachNewInternal::AddRecord(pPtr, filename, lineNum);
     return pPtr;
 #else
-    return DebugAlloc(size, filename, lineNum);
+    return BleachNewInternal::DebugAlloc(size, filename, lineNum);
 #endif
 }
 
 void operator delete[](void* pMemory)
 {
-#if ENABLE_BLEACH_MEMORY_DEBUGGING
-    MemoryDebug::RemoveRecord(pMemory);
+#if ENABLE_BLEACH_ALLOCATION_TRACKING
+    BleachNewInternal::RemoveRecord(pMemory);
 #endif
-    DebugFree(pMemory);
+    BleachNewInternal::DebugFree(pMemory);
 }
 
-#if ENABLE_BLEACH_MEMORY_DEBUGGING
+#if ENABLE_BLEACH_ALLOCATION_TRACKING
     void* operator new(size_t size, const char* filename, int lineNum, uint64_t count)
     {
-        void* pPtr = DebugAlloc(size, filename, lineNum);
-        MemoryDebug::AddRecord(pPtr, filename, lineNum, count);
+        void* pPtr = BleachNewInternal::DebugAlloc(size, filename, lineNum);
+        BleachNewInternal::AddRecord(pPtr, filename, lineNum, count);
         return pPtr;
     }
 
     void* operator new[](size_t size, const char* filename, int lineNum, uint64_t count)
     {
-        void* pPtr = DebugAlloc(size, filename, lineNum);
-        MemoryDebug::AddRecord(pPtr, filename, lineNum, count);
+        void* pPtr = BleachNewInternal::DebugAlloc(size, filename, lineNum);
+        BleachNewInternal::AddRecord(pPtr, filename, lineNum, count);
         return pPtr;
     }
 
-#endif  // ENABLE_BLEACH_MEMORY_DEBUGGING
+#endif  // ENABLE_BLEACH_ALLOCATION_TRACKING
 
 #endif  // USE_DEBUG_BLEACH_NEW

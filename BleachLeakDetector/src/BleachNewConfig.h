@@ -41,4 +41,4 @@
 // is especially useful when you have a loop or something that calls new over and over, but only one of those 
 // allocations is leaking.
 //---------------------------------------------------------------------------------------------------------------------
-#define ENABLE_BLEACH_MEMORY_DEBUGGING 0
+#define ENABLE_BLEACH_ALLOCATION_TRACKING 0
