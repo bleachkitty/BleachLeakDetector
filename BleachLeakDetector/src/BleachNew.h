@@ -31,9 +31,6 @@
         #include <cstdint>
     #endif
 
-    #pragma warning(push)
-    #pragma warning(disable : 4291)  // 'void *operator new(size_t,const char *,int)': no matching operator delete found; memory will not be freed if initialization throws an exception
-
     //-----------------------------------------------------------------------------------------------------------------
     // Internal interface used by the macros below.  These should not be called directly; call the macros instead.
     //-----------------------------------------------------------------------------------------------------------------
@@ -98,8 +95,6 @@
         #define BLEACH_NEW_ARRAY_BREAK(_type_, _size_, _count_) BLEACH_NEW_ARRAY(_type_, _size_)
         #define DUMP_MEMORY_RECORDS() void(0)
     #endif  // ENABLE_BLEACH_ALLOCATION_TRACKING
-
-    #pragma warning(pop)
 
 #else  // !USE_DEBUG_BLEACH_NEW
     #define INIT_LEAK_DETECTOR() void(0)
