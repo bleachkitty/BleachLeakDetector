@@ -55,7 +55,9 @@
     //-----------------------------------------------------------------------------------------------------------------
     void* operator new(size_t size, const char* filename, int lineNum);
     void operator delete(void* pMemory);
+    void operator delete(void* pMemory, const char*, int);
     void* operator new[](size_t size, const char* filename, int lineNum);
+    void operator delete[](void* pMemory);
     void operator delete[](void* pMemory);
 
     //-----------------------------------------------------------------------------------------------------------------

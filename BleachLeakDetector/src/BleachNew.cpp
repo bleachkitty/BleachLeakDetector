@@ -330,6 +330,14 @@ void operator delete(void* pMemory)
     BleachNewInternal::DebugFree(pMemory);
 }
 
+void operator delete(void* pMemory, const char*, int)
+{
+#if ENABLE_BLEACH_ALLOCATION_TRACKING
+    BleachNewInternal::RemoveRecord(pMemory);
+#endif
+    BleachNewInternal::DebugFree(pMemory);
+}
+
 void* operator new[](size_t size, const char* filename, int lineNum)
 {
 #if ENABLE_BLEACH_ALLOCATION_TRACKING
@@ -342,6 +350,14 @@ void* operator new[](size_t size, const char* filename, int lineNum)
 }
 
 void operator delete[](void* pMemory)
+{
+#if ENABLE_BLEACH_ALLOCATION_TRACKING
+    BleachNewInternal::RemoveRecord(pMemory);
+#endif
+    BleachNewInternal::DebugFree(pMemory);
+}
+
+void operator delete[](void* pMemory, const char*, int)
 {
 #if ENABLE_BLEACH_ALLOCATION_TRACKING
     BleachNewInternal::RemoveRecord(pMemory);

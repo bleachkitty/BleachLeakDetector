@@ -23,6 +23,28 @@
 //---------------------------------------------------------------------------------------------------------------------
 
 #include "BleachNew.h"
+#include <cstring>
+
+class Foo
+{
+    static constexpr size_t kBufferSize = 4;
+
+    char* m_pBuffer;
+
+public:
+    Foo()
+        : m_pBuffer(BLEACH_NEW_ARRAY(char, kBufferSize))
+    {
+        std::memset(m_pBuffer, 0, kBufferSize);
+        m_pBuffer[0] = 'X';
+    }
+
+    ~Foo()
+    {
+        BLEACH_DELETE_ARRAY(m_pBuffer);
+        m_pBuffer = nullptr;
+    }
+};
 
 int main()
 {
@@ -52,6 +74,10 @@ int main()
     BLEACH_DELETE(pValues[1]);
     BLEACH_DELETE(pValues[3]);
     BLEACH_DELETE(pValues[4]);
+
+    // Using a custom class.
+    Foo* pFoo = BLEACH_NEW(Foo);
+    BLEACH_DELETE(pFoo);
 
     // Destroy the leak detector.  This dumps all memory leaks.
     DESTROY_LEAK_DETECTOR();
