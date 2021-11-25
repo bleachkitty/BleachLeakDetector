@@ -55,7 +55,7 @@
     void operator delete(void* pMemory, const char*, int);
     void* operator new[](size_t size, const char* filename, int lineNum);
     void operator delete[](void* pMemory);
-    void operator delete[](void* pMemory);
+    void operator delete[](void* pMemory, const char*, int);
 
     //-----------------------------------------------------------------------------------------------------------------
     // Initialization & Destruction.  Call INIT_LEAK_DETECTOR() at the top of main() and DESTROY_LEAK_DETECTOR() at 
