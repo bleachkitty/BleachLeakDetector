@@ -25,11 +25,21 @@
 #pragma once
 
 //---------------------------------------------------------------------------------------------------------------------
+// BLEACH_WINDOWS is defined if we are building for the Windows platform.  You don't need to change this.
+//---------------------------------------------------------------------------------------------------------------------
+#ifndef BLEACH_WINDOWS
+    #if defined(WIN32) || defined(_WIN32) || defined(__TOS_WIN__)
+        #define BLEACH_WINDOWS
+    #endif
+#endif
+
+
+//---------------------------------------------------------------------------------------------------------------------
 // This must be set to 1 in order to use the leak detector.  If it's set to 0, the BLEACH_* macros will just call new 
 // and delete.  Note that this should only be done in debug mode.  It's also a Windows-only thing since we're using 
 // Microsoft-specific CRT extensions.
 //---------------------------------------------------------------------------------------------------------------------
-#if defined(_WIN32) && defined(_DEBUG)
+#if defined(BLEACH_WINDOWS) && defined(_DEBUG)
     #define USE_DEBUG_BLEACH_NEW 1
 #else
     #define USE_DEBUG_BLEACH_NEW 0
@@ -41,4 +51,10 @@
 // is especially useful when you have a loop or something that calls new over and over, but only one of those 
 // allocations is leaking.
 //---------------------------------------------------------------------------------------------------------------------
-#define ENABLE_BLEACH_ALLOCATION_TRACKING 0
+#define ENABLE_BLEACH_ALLOCATION_TRACKING 1
+
+//---------------------------------------------------------------------------------------------------------------------
+// If set to 1, use EASTL internally.  EASTL is required to be in the include path and linked as normal.  If set to 0, 
+// the leak detector will use whatever containers are in the std namespace.
+//---------------------------------------------------------------------------------------------------------------------
+#define BLEACH_NEW_USE_EASTL 0

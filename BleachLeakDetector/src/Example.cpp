@@ -49,7 +49,7 @@ public:
 int main()
 {
     // Initialize the leak detector.
-    INIT_LEAK_DETECTOR();
+    BLEACH_INIT_LEAK_DETECTOR();
 
     // Basic test.  You should get the following message in the debug output window:
     //      <path>\Example.cpp(35) : {161} normal block at 0x000001969397CB30, 32 bytes long.
@@ -80,7 +80,7 @@ int main()
     BLEACH_DELETE(pFoo);
 
     // Destroy the leak detector.  This dumps all memory leaks.
-    DESTROY_LEAK_DETECTOR();
+    BLEACH_DUMP_AND_DESTROY_LEAK_DETECTOR();
 
     return 0;
 }
