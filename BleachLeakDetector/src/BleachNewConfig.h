@@ -51,7 +51,7 @@
 // is especially useful when you have a loop or something that calls new over and over, but only one of those 
 // allocations is leaking.
 //---------------------------------------------------------------------------------------------------------------------
-#define ENABLE_BLEACH_ALLOCATION_TRACKING 1
+#define ENABLE_BLEACH_ALLOCATION_TRACKING 0
 
 //---------------------------------------------------------------------------------------------------------------------
 // If set to 1, use EASTL internally.  EASTL is required to be in the include path and linked as normal.  If set to 0, 
