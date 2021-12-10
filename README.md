@@ -1,5 +1,5 @@
 # Bleach Leak Detector Overview
-This is a very simple leak detection system that wraps the CRT.  It's mostly here for students to be able to use without having to write their own.  ;)
+This is a very simple leak detection system that wraps the CRT.  It's mostly here for students to be able to use without having to write their own.  ;)  It only requires C++ 14 and relies on standard libraries, so no external libraries are required.
 
 There are three major features of the leak detection system:
 
@@ -16,8 +16,8 @@ To use it in your own projects, you must do the following:
 1) Copy BleachNew.h, BleachNew.cpp, and BleachNewConfig.h somewhere into your project.  Alternatively, you could probably build it as a library that you link in.
 2) Replace all calls to `new` with calls to the `BLEACH_NEW` or `BLEACH_NEW_ARRAY` macros as appropriate.
 3) Do the same with `delete` and `BLEACH_DELETE`/`BLEACH_DELETE_ARRAY`.
-4) Add a call to `INIT_LEAK_DETECTOR` at the top of main() before any memory allocations happen.
-5) Add a call to `DESTROY_LEAK_DETECTOR` at the bottom of main() after all memory has been released.
+4) Add a call to `BLEACH_INIT_LEAK_DETECTOR` at the top of main() before any memory allocations happen.
+5) Add a call to `BLEACH_DUMP_AND_DESTROY_LEAK_DETECTOR` at the bottom of main() after all memory has been released.
 6) Make any changes to the BleachNewConfig.h file that are appropriate.  See the comments in that file for details.
 
 That's about it!
