@@ -284,7 +284,7 @@
         //---------------------------------------------------------------------------------------------------------------------
         void InitLeakDetector()
         {
-            ::OutputDebugStringA("Initializing Bleach Leak Detector.");
+            ::OutputDebugStringA("Initializing Bleach Leak Detector.\n");
             _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
             if (!g_pMemoryDebugger)
                 g_pMemoryDebugger = new MemoryDebugger;  // purposefully not using the overloaded version of new
@@ -297,7 +297,7 @@
                 DumpMemoryRecords();
                 delete g_pMemoryDebugger;
                 g_pMemoryDebugger = nullptr;  // purposefully not using the overloaded version of delete
-                ::OutputDebugStringA("Exiting Bleach Leak Detector.");
+                ::OutputDebugStringA("Exiting Bleach Leak Detector.\n");
             }
         }
 
